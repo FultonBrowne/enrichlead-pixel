@@ -2,6 +2,8 @@
   const script = document.getElementById("pixel-js");
   const pid = script.getAttribute("data-pid");
   const domain = window.location.hostname;
+  const functionUrl =
+    "https://us-central1-visitorfit.cloudfunctions.net/handlePixelData";
 
   function getVisitorData() {
     return {
@@ -24,32 +26,23 @@
 
   function trackVisit() {
     const data = getVisitorData();
-
-    // Usando Firebase Functions SDK
-    const functionUrl =
-      "https://us-central1-visitorfit.cloudfunctions.net/handlePixelData";
-
     fetch(functionUrl, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({
-        data: data, // Envolvemos los datos en un objeto 'data' como espera Cloud Functions
-      }),
+      body: JSON.stringify(data),
     }).catch((error) => {
       console.error("Error sending tracking data:", error);
     });
   }
 
-  // Track initial page load
   if (document.readyState === "complete") {
     trackVisit();
   } else {
     window.addEventListener("load", trackVisit);
   }
 
-  // Track navigation changes (SPA)
   let lastPath = window.location.pathname;
   const observer = new MutationObserver(() => {
     const currentPath = window.location.pathname;
@@ -63,13 +56,11 @@
     childList: true,
   });
 
-  // Track page exit
   window.addEventListener("beforeunload", () => {
-    const data = {
-      ...getVisitorData(),
+    const data = Object.assign({}, getVisitorData(), {
       event: "page_exit",
       timeSpent: (new Date() - performance.timing.navigationStart) / 1000,
-    };
-    navigator.sendBeacon(functionUrl, JSON.stringify({ data: data }));
+    });
+    navigator.sendBeacon(functionUrl, JSON.stringify(data));
   });
 })();
