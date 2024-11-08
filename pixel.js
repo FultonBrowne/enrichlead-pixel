@@ -1,14 +1,12 @@
 (function () {
-  const script = document.getElementById("vtag-ai-js");
+  const script = document.getElementById("pixel-js");
   const pid = script.getAttribute("data-pid");
   const domain = window.location.hostname;
-  const endpoint =
-    "https://[TU-REGION]-[TU-PROYECTO].cloudfunctions.net/trackVisitor";
 
   function getVisitorData() {
     return {
-      pid,
-      domain,
+      pid: pid,
+      domain: domain,
       path: window.location.pathname,
       referrer: document.referrer,
       userAgent: navigator.userAgent,
@@ -27,23 +25,31 @@
   function trackVisit() {
     const data = getVisitorData();
 
-    fetch(endpoint, {
+    // Usando Firebase Functions SDK
+    const functionUrl =
+      "https://us-central1-visitorfit.cloudfunctions.net/handlePixelData";
+
+    fetch(functionUrl, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify(data),
+      body: JSON.stringify({
+        data: data, // Envolvemos los datos en un objeto 'data' como espera Cloud Functions
+      }),
     }).catch((error) => {
       console.error("Error sending tracking data:", error);
     });
   }
 
+  // Track initial page load
   if (document.readyState === "complete") {
     trackVisit();
   } else {
     window.addEventListener("load", trackVisit);
   }
 
+  // Track navigation changes (SPA)
   let lastPath = window.location.pathname;
   const observer = new MutationObserver(() => {
     const currentPath = window.location.pathname;
@@ -52,19 +58,18 @@
       trackVisit();
     }
   });
-
   observer.observe(document.documentElement, {
     subtree: true,
     childList: true,
   });
 
+  // Track page exit
   window.addEventListener("beforeunload", () => {
     const data = {
       ...getVisitorData(),
       event: "page_exit",
       timeSpent: (new Date() - performance.timing.navigationStart) / 1000,
     };
-
-    navigator.sendBeacon(endpoint, JSON.stringify(data));
+    navigator.sendBeacon(functionUrl, JSON.stringify({ data: data }));
   });
 })();
