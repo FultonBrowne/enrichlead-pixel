@@ -1,11 +1,15 @@
-// prettier-ignore
 !(function () {
-  function initPixel(pid) {
-    const functionUrl =
+  function sendPixelData(pid) {
+    const endpoint =
       "https://us-central1-visitorfit.cloudfunctions.net/handlePixelData";
     const domain = window.location.hostname;
 
-    function getVisitorData() {
+    let scriptElement = document.createElement("script");
+    scriptElement.async = true;
+    scriptElement.src = `${endpoint}?pid=${pid}`;
+    document.head.appendChild(scriptElement);
+
+    function buildPayload() {
       return {
         pid: pid,
         domain: domain,
@@ -17,43 +21,45 @@
       };
     }
 
-    // Enviar datos
-    fetch(functionUrl, {
+    fetch(endpoint, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(getVisitorData()),
+      body: JSON.stringify(buildPayload()),
     })
-      .then((response) => console.log("✅ Datos enviados"))
+      .then((response) => {
+        if (response.ok) {
+          console.log("✅ Data sent");
+        } else {
+          console.error("❌ Error in response:", response.statusText);
+        }
+      })
       .catch((error) => console.error("❌ Error:", error));
 
-    // Mostrar alerta si está en modo prueba
     if (location.href.includes("test=true")) {
-      const message =
-        "¡Felicitaciones!\n\nHas instalado el pixel correctamente.\nPuedes cerrar esta pestaña.";
-      window.alert(message);
+      alert(
+        "Congratulations!\n\nYou have successfully installed the pixel.\nYou can close this tab."
+      );
     }
   }
 
-  // Obtener PID del script
-  let script = document.currentScript;
-  let pid = script?.dataset?.pid;
+  let currentScript = document.currentScript;
+  let pid = currentScript?.dataset?.pid;
 
-  // Intentar diferentes métodos para obtener el PID
   if (pid) {
-    initPixel(pid);
-  } else if (script) {
-    pid = new URL(script.src).searchParams.get("pid");
+    sendPixelData(pid);
+  } else if (currentScript) {
+    pid = new URL(currentScript.src).searchParams.get("pid");
     if (pid) {
-      console.log("> debug: usando pid de query", pid);
-      initPixel(pid);
+      console.log("> debug: using pid from query", pid);
+      sendPixelData(pid);
     }
   } else {
     document.addEventListener("DOMContentLoaded", function () {
-      let backupScript = document.getElementById("pixel-js");
-      let backupPid = backupScript?.dataset?.pid;
+      let scriptElement = document.getElementById("pixel-js");
+      let backupPid = scriptElement?.dataset?.pid;
       if (backupPid) {
-        console.log("> debug: usando pid de backup", backupPid);
-        initPixel(backupPid);
+        console.log("> debug: using pid from backup", backupPid);
+        sendPixelData(backupPid);
       }
     });
   }
