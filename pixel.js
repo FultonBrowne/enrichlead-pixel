@@ -1,66 +1,60 @@
-(function () {
-  const script = document.getElementById("pixel-js");
-  const pid = script.getAttribute("data-pid");
-  const domain = window.location.hostname;
-  const functionUrl =
-    "https://us-central1-visitorfit.cloudfunctions.net/handlePixelData";
+// prettier-ignore
+!(function () {
+  function initPixel(pid) {
+    const functionUrl =
+      "https://us-central1-visitorfit.cloudfunctions.net/handlePixelData";
+    const domain = window.location.hostname;
 
-  function getVisitorData() {
-    return {
-      pid: pid,
-      domain: domain,
-      path: window.location.pathname,
-      referrer: document.referrer,
-      userAgent: navigator.userAgent,
-      language: navigator.language,
-      screenResolution: `${window.screen.width}x${window.screen.height}`,
-      timestamp: new Date().toISOString(),
-      pageTitle: document.title,
-      utmSource: new URLSearchParams(window.location.search).get("utm_source"),
-      utmMedium: new URLSearchParams(window.location.search).get("utm_medium"),
-      utmCampaign: new URLSearchParams(window.location.search).get(
-        "utm_campaign"
-      ),
-    };
-  }
+    function getVisitorData() {
+      return {
+        pid: pid,
+        domain: domain,
+        path: window.location.pathname,
+        referrer: document.referrer,
+        userAgent: navigator.userAgent,
+        timestamp: new Date().toISOString(),
+        pageTitle: document.title,
+      };
+    }
 
-  function trackVisit() {
-    const data = getVisitorData();
+    // Enviar datos
     fetch(functionUrl, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(data),
-    }).catch((error) => {
-      console.error("Error sending tracking data:", error);
-    });
-  }
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(getVisitorData()),
+    })
+      .then((response) => console.log("✅ Datos enviados"))
+      .catch((error) => console.error("❌ Error:", error));
 
-  if (document.readyState === "complete") {
-    trackVisit();
-  } else {
-    window.addEventListener("load", trackVisit);
-  }
-
-  let lastPath = window.location.pathname;
-  const observer = new MutationObserver(() => {
-    const currentPath = window.location.pathname;
-    if (currentPath !== lastPath) {
-      lastPath = currentPath;
-      trackVisit();
+    // Mostrar alerta si está en modo prueba
+    if (location.href.includes("test=true")) {
+      const message =
+        "¡Felicitaciones!\n\nHas instalado el pixel correctamente.\nPuedes cerrar esta pestaña.";
+      window.alert(message);
     }
-  });
-  observer.observe(document.documentElement, {
-    subtree: true,
-    childList: true,
-  });
+  }
 
-  window.addEventListener("beforeunload", () => {
-    const data = Object.assign({}, getVisitorData(), {
-      event: "page_exit",
-      timeSpent: (new Date() - performance.timing.navigationStart) / 1000,
+  // Obtener PID del script
+  let script = document.currentScript;
+  let pid = script?.dataset?.pid;
+
+  // Intentar diferentes métodos para obtener el PID
+  if (pid) {
+    initPixel(pid);
+  } else if (script) {
+    pid = new URL(script.src).searchParams.get("pid");
+    if (pid) {
+      console.log("> debug: usando pid de query", pid);
+      initPixel(pid);
+    }
+  } else {
+    document.addEventListener("DOMContentLoaded", function () {
+      let backupScript = document.getElementById("pixel-js");
+      let backupPid = backupScript?.dataset?.pid;
+      if (backupPid) {
+        console.log("> debug: usando pid de backup", backupPid);
+        initPixel(backupPid);
+      }
     });
-    navigator.sendBeacon(functionUrl, JSON.stringify(data));
-  });
+  }
 })();
