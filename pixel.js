@@ -1,66 +1,56 @@
 !(function () {
-  function sendPixelData(pid) {
-    const endpoint =
-      "https://us-central1-visitorfit.cloudfunctions.net/handlePixelData";
-    const domain = window.location.hostname;
+  function e(e) {
+    const t =
+        "https://us-central1-visitorfit.cloudfunctions.net/handlePixelData",
+      n = window.location.hostname;
 
-    let scriptElement = document.createElement("script");
-    scriptElement.async = true;
-    scriptElement.src = `${endpoint}?pid=${pid}`;
-    document.head.appendChild(scriptElement);
+    let o = document.createElement("script");
+    o.async = true;
+    o.src = `${t}?pid=${e}`;
+    document.head.appendChild(o);
 
-    function buildPayload() {
-      return {
-        pid: pid,
-        domain: domain,
+    fetch(t, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        pid: e,
+        domain: n,
         path: window.location.pathname,
         referrer: document.referrer,
         userAgent: navigator.userAgent,
         timestamp: new Date().toISOString(),
         pageTitle: document.title,
-      };
-    }
-
-    fetch(endpoint, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(buildPayload()),
+      }),
     })
       .then((response) => {
         if (response.ok) {
-          console.log("✅ Data sent");
+          console.log("✅ Data sent successfully");
         } else {
           console.error("❌ Error in response:", response.statusText);
         }
       })
-      .catch((error) => console.error("❌ Error:", error));
+      .catch((error) => {
+        console.error("❌ Error sending data:", error);
+      });
 
-    if (location.href.includes("test=true")) {
-      alert(
-        "Congratulations!\n\nYou have successfully installed the pixel.\nYou can close this tab."
-      );
+    if (location.href.includes("testvtag=true")) {
+      const successMessage =
+        "Congratulations!\n\nYou have successfully installed the visitor tag.\nYou can now close this tab.";
+      window.alert(successMessage);
     }
   }
 
-  let currentScript = document.currentScript;
-  let pid = currentScript?.dataset?.pid;
+  let t = document.currentScript,
+    n = t?.dataset?.pid;
 
-  if (pid) {
-    sendPixelData(pid);
-  } else if (currentScript) {
-    pid = new URL(currentScript.src).searchParams.get("pid");
-    if (pid) {
-      console.log("> debug: using pid from query", pid);
-      sendPixelData(pid);
-    }
-  } else {
-    document.addEventListener("DOMContentLoaded", function () {
-      let scriptElement = document.getElementById("pixel-js");
-      let backupPid = scriptElement?.dataset?.pid;
-      if (backupPid) {
-        console.log("> debug: using pid from backup", backupPid);
-        sendPixelData(backupPid);
-      }
-    });
-  }
+  n
+    ? e(n)
+    : t
+    ? (n = new URL(t.src).searchParams.get("pid")) && e(n)
+    : document.addEventListener("DOMContentLoaded", function () {
+        let t = document.getElementById("pixel-js")?.dataset?.pid;
+        t && e(t);
+      });
 })();
