@@ -1,29 +1,29 @@
-!(function () {
-  function e(e) {
-    const t =
-        "https://us-central1-visitorfit.cloudfunctions.net/handlePixelData",
-      n = window.location.hostname;
-    let o = document.createElement("script");
-    (o.async = !0),
-      (o.src = `${t}?pid=${e}`),
-      document.head.appendChild(o),
+(() => {
+  function t(t) {
+    console.log("PID:", t);
+    let n = "https://us-central1-visitorfit.cloudfunctions.net/handlePixelData",
+      o = window.location.hostname;
+    var e = document.createElement("script");
+    (e.async = !0),
+      (e.src = n + "?pid=" + t),
+      document.head.appendChild(e),
       fetch(
         "https://api.ipdata.co?api-key=33c71249f49c4fc76a917075a622ab36f32162febc931448cd214d04"
       )
-        .then((response) => response.json())
-        .then((ipData) => {
-          fetch(t, {
+        .then((e) => e.json())
+        .then((e) => {
+          fetch(n, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
-              pid: e,
-              domain: n,
+              pid: t,
+              domain: o,
               path: window.location.pathname,
               referrer: document.referrer,
               userAgent: navigator.userAgent,
               timestamp: new Date().toISOString(),
               pageTitle: document.title,
-              ipData: ipData,
+              ipData: e,
             }),
           })
             .then((e) => {
@@ -35,15 +35,15 @@
         })
         .catch((e) => console.error("❌ Error:", e));
   }
-  let t = document.currentScript,
-    n = t?.dataset?.pid;
+  var e = document.currentScript,
+    n = e?.dataset?.pid;
   n
-    ? e(n)
-    : t
-    ? (n = new URL(t.src).searchParams.get("pid")) &&
-      (console.log("> debug: using pid from query", n), e(n))
+    ? t(n)
+    : e
+    ? (n = new URL(e.src).searchParams.get("pid")) &&
+      (console.log("> debug: using pid from query", n), t(n))
     : document.addEventListener("DOMContentLoaded", function () {
-        let t = document.getElementById("pixel-js")?.dataset?.pid;
-        t && (console.log("> debug: using pid from backup", t), e(t));
+        var e = document.getElementById("pixel-js")?.dataset?.pid;
+        e && (console.log("> debug: using pid from backup", e), t(e));
       });
 })();
