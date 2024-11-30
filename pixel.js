@@ -3,16 +3,24 @@
     console.log("PID:", t);
     let n = "https://us-central1-visitorfit.cloudfunctions.net/handlePixelData",
       o = window.location.hostname,
-      e = document.createElement("script");
-    (e.async = !0), (e.src = n + "?pid=" + t), document.head.appendChild(e);
-    const isTest =
-      new URL(window.location.href).searchParams.get("test") === "true";
+      a = new URL(window.location.href).searchParams.get("test") === "true";
+
     fetch(
       "https://api.ipdata.co?api-key=33c71249f49c4fc76a917075a622ab36f32162febc931448cd214d04"
     )
-      .then((e) => e.json())
       .then((e) => {
-        fetch(n, {
+        if (!e.ok) throw new Error(`HTTP error! status: ${e.status}`);
+        return e.json();
+      })
+      .then((e) => {
+        console.log("Datos a enviar:", {
+          pid: t,
+          domain: o,
+          path: window.location.pathname,
+          ipData: e,
+        });
+
+        return fetch(n, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -24,25 +32,18 @@
             timestamp: new Date().toISOString(),
             pageTitle: document.title,
             ipData: e,
-            test: isTest,
+            test: a,
           }),
-        })
-          .then((e) => {
-            if (e.ok) {
-              console.log("✅ Data sent successfully");
-              if (isTest) {
-                alert("Congratulations! Test completed successfully");
-              }
-            } else {
-              console.error("❌ Error in response:", e.statusText);
-            }
-          })
-          .catch((e) => {
-            console.error("❌ Error:", e);
-          });
+        });
+      })
+      .then((e) => {
+        e.ok
+          ? (console.log("✅ Data sent successfully"),
+            a && alert("Congratulations! Test completed successfully"))
+          : console.error("❌ Error in response:", e.statusText);
       })
       .catch((e) => {
-        console.error("❌ Error fetching IP data:", e);
+        console.error("❌ Error:", e);
       });
   }
   var e = document.currentScript,
