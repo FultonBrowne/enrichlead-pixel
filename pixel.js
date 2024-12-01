@@ -1,49 +1,49 @@
 (() => {
   function t(t) {
     console.log("PID:", t);
-    let n = "https://us-central1-visitorfit.cloudfunctions.net/handlePixelData",
-      o = window.location.hostname,
-      a = new URL(window.location.href).searchParams.get("test") === "true";
-
+    let o = window.location.hostname,
+      n = new URL(window.location.href).searchParams.get("test") === "true";
     fetch(
       "https://api.ipdata.co?api-key=33c71249f49c4fc76a917075a622ab36f32162febc931448cd214d04"
     )
+      .then((e) => e.json())
       .then((e) => {
-        if (!e.ok) throw new Error(`HTTP error! status: ${e.status}`);
-        return e.json();
-      })
-      .then((e) => {
-        console.log("Datos a enviar:", {
+        console.log("Data to send:", {
           pid: t,
           domain: o,
-          path: window.location.pathname,
           ipData: e,
         });
 
-        return fetch(n, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            pid: t,
-            domain: o,
-            path: window.location.pathname,
-            referrer: document.referrer,
-            userAgent: navigator.userAgent,
-            timestamp: new Date().toISOString(),
-            pageTitle: document.title,
-            ipData: e,
-            test: a,
-          }),
-        });
-      })
-      .then((e) => {
-        e.ok
-          ? (console.log("✅ Data sent successfully"),
-            a && alert("Congratulations! Test completed successfully"))
-          : console.error("❌ Error in response:", e.statusText);
+        fetch(
+          "https://us-central1-visitorfit.cloudfunctions.net/handlePixelData",
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              pid: t,
+              domain: o,
+              path: window.location.pathname,
+              referrer: document.referrer,
+              userAgent: navigator.userAgent,
+              timestamp: new Date().toISOString(),
+              pageTitle: document.title,
+              ipData: e,
+              test: n,
+            }),
+          }
+        )
+          .then((e) => {
+            e.ok
+              ? (console.log("✅ Data sent successfully"),
+                n && alert("Congratulations! Test completed successfully"))
+              : console.error("❌ Error in response:", e.statusText);
+          })
+          .catch((e) => {
+            console.error("❌ Error:", e);
+          });
       })
       .catch((e) => {
-        console.error("❌ Error:", e);
+        console.error("❌ Error fetching IP data:", e);
       });
   }
   var e = document.currentScript,
