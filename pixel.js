@@ -8,12 +8,6 @@
     )
       .then((e) => e.json())
       .then((e) => {
-        console.log("Data to send:", {
-          pid: t,
-          domain: o,
-          ipData: e,
-        });
-
         fetch(
           "https://us-central1-visitorfit.cloudfunctions.net/handlePixelData",
           {
@@ -34,7 +28,7 @@
         )
           .then((e) => {
             e.ok
-              ? (console.log("✅ Data sent successfully"),
+              ? (console.log("✅ Data sent successfully", e),
                 n && alert("Congratulations! Test completed successfully"))
               : console.error("❌ Error in response:", e.statusText);
           })
