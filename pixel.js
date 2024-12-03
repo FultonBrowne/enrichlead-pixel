@@ -4,7 +4,7 @@
     let o = window.location.hostname,
       n = "true" === new URL(window.location.href).searchParams.get("test");
     fetch(
-      "https://api.ipdata.co?api-key=33c71249f49c4fc76a917075a622ab36f32162febc931448cd214d04&fields=ip,city,region,country_name,country_code,asn,company"
+      "https://api.ipdata.co?api-key=04037bc3a1392806ac203439fb12fc52965ba905de6288209724aec2&fields=ip,city,region,country_name,country_code,asn,company"
     )
       .then((e) => e.json())
       .then((e) => {
