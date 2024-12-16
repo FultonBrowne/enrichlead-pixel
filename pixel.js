@@ -9,7 +9,7 @@
       .then((e) => e.json())
       .then((e) => {
         fetch(
-          "https://us-central1-visitorfit.cloudfunctions.net/handlePixelData",
+          "https://us-central1-enrichlead-27045.cloudfunctions.net/handlePixelData",
           {
             method: "POST",
             headers: { "Content-Type": "application/json" },
